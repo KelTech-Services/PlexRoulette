@@ -63,8 +63,8 @@ def login_required(f):
     def decorated_function(*args, **kwargs):
         config = load_config()
         
-        # If local auth disabled and Plex connected, auto-login
-        if config.get('local_auth_disabled') and config.get('plex_token'):
+        # If local auth disabled, auto-login (even if Plex not yet connected)
+        if config.get('local_auth_disabled'):
             if not session.get('logged_in'):
                 session['logged_in'] = True
                 session['username'] = 'plex_user'
