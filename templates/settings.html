@@ -210,21 +210,31 @@
 
     <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border);">
         <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+            {% if config.get('local_auth_disabled') %}
+            <form method="POST" action="{{ url_for('enable_local_auth') }}" onsubmit="return confirm('This will enable local authentication. You will be prompted to create an admin account.');">
+                <button type="submit" title="Enable username/password login for this instance." style="background: #2ecc71; border: none; width: auto; padding: 12px 24px;">
+                    🔐 Enable Local Authentication
+                </button>
+            </form>
+            {% else %}
             <form method="POST" action="{{ url_for('reset_password') }}" onsubmit="return confirm('Are you sure? This will delete your admin account and require you to create a new one.');">
                 <button type="submit" title="This deletes your admin account entirely. You will need to create a new username and password on the next page load." style="background: #cc7700; border: none; width: auto; padding: 12px 24px;">
                     🔑 Reset Password
                 </button>
             </form>
+            {% endif %}
             <form method="GET" action="{{ url_for('signout') }}">
                 <button type="submit" style="background: #cc3333; border: none; width: auto; padding: 12px 24px;">
                     🔌 Disconnect Plex
                 </button>
             </form>
+            {% if not config.get('local_auth_disabled') %}
             <form method="GET" action="{{ url_for('app_logout') }}">
                 <button type="submit" style="background: #666; border: none; width: auto; padding: 12px 24px;">
                     🚪 Log Out
                 </button>
             </form>
+            {% endif %}
         </div>
     </div>
 
@@ -251,9 +261,14 @@
             When enabled, MediaRoulette keeps track of your last 20 picks. You can view or clear your history from the main picker page.
         </p>
         
-        <p style="margin-bottom: 0; color: var(--text-secondary); line-height: 1.6;">
+        <p style="margin-bottom: 12px; color: var(--text-secondary); line-height: 1.6;">
             <strong style="color: var(--text-primary);">Reset Password:</strong> 
             This deletes your admin account entirely. You will need to create a new username and password, and reconnect to Plex on the next page load.
+        </p>
+        
+        <p style="margin-bottom: 0; color: var(--text-secondary); line-height: 1.6;">
+            <strong style="color: var(--text-primary);">Enable Local Authentication:</strong> 
+            If you initially skipped local login setup (for use behind an auth proxy), you can enable it here. You'll be prompted to create an admin account.
         </p>
     </section>
 

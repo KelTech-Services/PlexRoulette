@@ -50,12 +50,26 @@ def save_users(users):
         json.dump(users, f, indent=2)
 
 def is_setup_complete():
+    config = load_config()
+    # Setup complete if local auth disabled + Plex connected
+    if config.get('local_auth_disabled') and config.get('plex_token'):
+        return True
+    # Or if users exist (traditional setup)
     users = load_users()
     return len(users) > 0
 
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        config = load_config()
+        
+        # If local auth disabled and Plex connected, auto-login
+        if config.get('local_auth_disabled') and config.get('plex_token'):
+            if not session.get('logged_in'):
+                session['logged_in'] = True
+                session['username'] = 'plex_user'
+            return f(*args, **kwargs)
+        
         if not is_setup_complete():
             return redirect(url_for('setup'))
         if not session.get('logged_in'):
@@ -110,11 +124,34 @@ def save_pick_history(username, history):
 
 @app.route('/setup', methods=['GET', 'POST'])
 def setup():
-    if is_setup_complete():
+    config = load_config()
+    
+    # If local auth disabled and Plex connected, go to index
+    if config.get('local_auth_disabled') and config.get('plex_token'):
+        return redirect(url_for('index'))
+    
+    # If local auth disabled but Plex not connected yet, continue to Plex login
+    if config.get('local_auth_disabled') and not config.get('plex_token'):
+        session['logged_in'] = True
+        session['username'] = 'plex_user'
+        return redirect(url_for('plex_login'))
+    
+    # If users exist (traditional setup), go to login
+    users = load_users()
+    if len(users) > 0:
         return redirect(url_for('login'))
     
     error = None
     if request.method == 'POST':
+        # Handle skip local auth option
+        if 'skip_local_auth' in request.form:
+            config['local_auth_disabled'] = True
+            save_config(config)
+            session['logged_in'] = True
+            session['username'] = 'plex_user'
+            print("[MediaRoulette] Local auth disabled, proceeding to Plex login", flush=True)
+            return redirect(url_for('plex_login'))
+        
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '')
         confirm_password = request.form.get('confirm_password', '')
@@ -135,10 +172,15 @@ def setup():
             save_users(users)
             session['logged_in'] = True
             session['username'] = username
-            print(f"Admin account created: {username}", flush=True)
+            print(f"[MediaRoulette] Admin account created: {username}", flush=True)
+            # If Plex already connected, go to index; otherwise to Plex login
+            if config.get('plex_token'):
+                return redirect(url_for('index'))
             return redirect(url_for('plex_login'))
     
-    return render_template('setup.html', error=error)
+    # Check if Plex is already connected (for users enabling local auth later)
+    plex_connected = bool(config.get('plex_token'))
+    return render_template('setup.html', error=error, plex_connected=plex_connected)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -183,6 +225,17 @@ def reset_password():
     if os.path.exists(USERS_FILE):
         os.remove(USERS_FILE)
         print(f"[MediaRoulette] Admin account reset by: {username}", flush=True)
+    session.clear()
+    return redirect(url_for('setup'))
+
+@app.route('/enable_local_auth', methods=['POST'])
+@login_required
+def enable_local_auth():
+    """Enable local authentication (for users who skipped it initially)"""
+    config = load_config()
+    config['local_auth_disabled'] = False
+    save_config(config)
+    print("[MediaRoulette] Local auth enabled, redirecting to create admin account", flush=True)
     session.clear()
     return redirect(url_for('setup'))
 

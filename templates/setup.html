@@ -127,6 +127,69 @@
             border-radius: 8px;
             text-align: center;
         }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 24px 0;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .divider span {
+            padding: 0 12px;
+        }
+
+        .skip-auth-section {
+            text-align: center;
+        }
+
+        .skip-description {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        .warning-box {
+            background: rgba(231, 76, 60, 0.1);
+            border: 1px solid rgba(231, 76, 60, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            text-align: left;
+        }
+
+        .warning-box strong {
+            color: #e74c3c;
+        }
+
+        .skip-btn {
+            width: 100%;
+            padding: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .skip-btn:hover {
+            border-color: var(--accent);
+            background: rgba(229, 160, 21, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -167,6 +230,23 @@
 
                 <button type="submit" class="submit-btn">Create Account</button>
             </form>
+
+            {% if not plex_connected %}
+            <div class="divider">
+                <span>or</span>
+            </div>
+
+            <div class="skip-auth-section">
+                <p class="skip-description">For users behind an external auth proxy (Authentik, Authelia, etc.)</p>
+                <div class="warning-box">
+                    <strong>⚠️ Warning:</strong> Only use this if your instance is protected by a separate authentication layer. Anyone who can access this URL will have full access.
+                </div>
+                <form method="POST">
+                    <input type="hidden" name="skip_local_auth" value="1">
+                    <button type="submit" class="skip-btn">Continue with Connecting Plex</button>
+                </form>
+            </div>
+            {% endif %}
         </div>
     </div>
 
