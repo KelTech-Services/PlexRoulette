@@ -31,7 +31,7 @@ For general questions or discussion, join our [Discord server](https://discord.g
 
 MediaRoulette is completely free and open source. If you find it useful, consider supporting development:
 
-[![PayPal](https://img.shields.io/badge/PayPal-Donate-blue?logo=paypal)](https://www.paypal.com/ncp/payment/7LUJELWRU3F8Y)
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support-ff5e5b?logo=kofi)](https://ko-fi.com/keltech)
 
 Donations help keep the project maintained, free, and growing. Every contribution is appreciated!
 
